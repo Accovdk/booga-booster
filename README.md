@@ -431,21 +431,24 @@ reviewed by Copilot CLI in `-p` mode against the rules in the rows above it. See
 
 ### Slash commands
 
-`/opsx:explore`, `/opsx:propose`, `/opsx:apply`, `/opsx:archive` — defined twice, once
-in `.claude/commands/opsx/` for Claude and once in `.github/prompts/` for Copilot.
-Keep the pair in sync.
+OpenSpec commands are defined twice: `.claude/commands/opsx/` for Claude Code and
+`.github/prompts/` for GitHub Copilot. The invocation spelling differs by tool:
+Claude Code uses `/opsx:apply`; GitHub Copilot uses `/opsx-apply`. Keep each pair in sync.
 
 ### Spec-driven development with OpenSpec
 
 Features here are not written straight into code. They go through
 [`openspec/`](openspec/):
 
-1. **`/opsx:explore`** — think the idea through, poke at the problem, clarify.
-2. **`/opsx:propose`** — generate a change folder with `proposal.md` (why / what /
-   impact), `design.md`, per-capability `specs/*/spec.md`, and `tasks.md`.
-3. **`/opsx:apply`** — work the task list, module by module, tests included.
-4. **`/opsx:archive`** — publish the capability specs into `openspec/specs/` and move
-   the change into `openspec/changes/archive/`.
+1. **Explore** — Claude Code `/opsx:explore`; GitHub Copilot `/opsx-explore`.
+2. **Propose** — Claude Code `/opsx:propose`; GitHub Copilot `/opsx-propose`.
+   Generates a change folder with `proposal.md`, `design.md`, per-capability
+   `specs/*/spec.md`, and `tasks.md`.
+3. **Apply** — Claude Code `/opsx:apply`; GitHub Copilot `/opsx-apply`.
+   Work the task list, module by module, tests included.
+4. **Archive** — Claude Code `/opsx:archive`; GitHub Copilot `/opsx-archive`.
+   Publishes capability specs into `openspec/specs/` and moves the change into
+   `openspec/changes/archive/`.
 
 `openspec/specs/` currently holds **20 published capabilities** (from
 `ride-state-machine` to `weather-driven-queue-fill`), and `openspec/changes/archive/`
