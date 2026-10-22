@@ -65,6 +65,9 @@ where `R(θ)` is the 2-D rotation matrix `[[cosθ, −sinθ], [sinθ, cosθ]]`, 
 
 This one equation drives both the physics (doc 5 differentiates it for accelerations)
 and the 3-D rendering (the frontend reads the three angle arrays and rebuilds the geometry).
+The complete hierarchy also receives one common world-space translation
+`(0, 0, z_assembly)`. It is added after the nested planar transforms, so it changes no
+arm length, relative position, or orientation.
 
 ### Mount angles
 
@@ -79,7 +82,8 @@ and the 3-D rendering (the frontend reads the three angle arrays and rebuilds th
 ## 1.3 The state vector
 
 The complete simulation state is small and flat — 21 rotating bodies, each with an
-angle and an angular rate, plus the seating/occupancy that sets their masses.
+angle and an angular rate, plus the assembly's vertical kinematics and the
+seating/occupancy that sets their masses.
 
 ```
 Ride state
@@ -87,6 +91,7 @@ Ride state
 ├─ Hub[4]      : { θ, ω }                          driven      (doc 2, 3)
 ├─ Cart[16]    : { θ, ω }                          passive     (doc 4)
 │    └─ Seat[2]: { occupiedKg }                    load input  (doc 2 §inertia)
+├─ Assembly Z  : { phase, θ_z, z, ż, z̈ }           lift profile (appendix parameters)
 ├─ RideState   : Idle | Loading | … | Faulted      state machine (Plan §6)
 └─ inputs      : per-drive throttle 0–1, env (wind), fault flags
 ```
@@ -109,21 +114,25 @@ One physics step, executed at fixed `dt`:
 ```
 tick(state, inputs, dt):
     1. Recompute inertia        I_mill, I_hub[i], I_pivot[ij]   from current seating   (doc 2)
-    2. Driven bodies            for mill and each hub:
+    2. Vertical assembly        advance explicit lift phase and derive z, ż, z̈           (appendix parameters)
+    3. Driven bodies            for mill and each hub:
          τ_motor  = motor(throttle, ω)                                                  (doc 3)
          τ_loss   = friction(ω) + drag(ω)                                               (doc 3)
          α        = (τ_motor − τ_loss) / I
          ω += α·dt ;  θ += ω·dt          // semi-implicit Euler                          (doc 2)
-    3. Passive carts            for each of the 16 carts:
+    4. Passive carts            for each of the 16 carts:
          compute centrifugal field (A, ψ_outward) at the pivot                          (doc 4, 5)
          τ = m·r_g·A·sin(ψ_outward − ψ_com) − c·ω_cart
          α = τ / I_pivot ;  ω_cart += α·dt ;  θ_cart += ω_cart·dt                        (doc 4)
-    4. Derived telemetry        G-forces, jerk, imbalance, energy, temps                 (doc 5)
-    5. Safety pass              over-G / over-speed / NaN watchdog → maybe trip EStop    (Plan §6)
+    5. Derived telemetry        combine lift and rotational specific force                (doc 5)
+    6. Safety pass              combined over-G / over-speed / NaN watchdog              (Plan §6)
 ```
 
 The ordering matters: inertia is refreshed **before** it is used; the driven bodies are
 stepped **before** the carts, because a cart's field depends on the mill/hub speeds.
+The vertical profile is advanced before the bodies with the same fixed `dt`; its
+acceleration is included when the seat forces are updated. Entry and exit envelopes
+retain the oscillator phase, so their boundaries do not reset position or velocity.
 
 ### Integration order (driven and passive alike)
 

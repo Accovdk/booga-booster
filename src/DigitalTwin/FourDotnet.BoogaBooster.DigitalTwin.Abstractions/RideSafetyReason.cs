@@ -19,5 +19,11 @@ public enum RideSafetyReason
     Overloaded,
 
     /// <summary>The ride is not in a state from which it can start.</summary>
-    WrongState
+    WrongState,
+
+    /// <summary>A seat's combined specific force has reached the maximum allowed G load.</summary>
+    OverG,
+
+    /// <summary>The assembly has not yet completed its smooth return to neutral height.</summary>
+    VerticalMotionNotNeutral
 }

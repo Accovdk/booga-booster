@@ -1,3 +1,5 @@
+using FourDotnet.BoogaBooster.DigitalTwin.Abstractions;
+
 namespace FourDotnet.BoogaBooster.DigitalTwin.Domain;
 
 /// <summary>
@@ -41,4 +43,58 @@ internal static class RideKinematics
         var fromHub = (pivot - hubCentre) * (hubOmega * hubOmega);
         return fromMill + fromHub;
     }
+
+    /// <summary>World-space position of the mill's central axis.</summary>
+    public static RideWorldPosition MillWorldPosition(double assemblyVerticalPositionMeters) =>
+        new(0d, 0d, assemblyVerticalPositionMeters);
+
+    /// <summary>World-space position of a hub, preserving its nested planar transform.</summary>
+    public static RideWorldPosition HubWorldPosition(
+        double millAngle,
+        int hubIndex,
+        double assemblyVerticalPositionMeters) =>
+        WithAssemblyHeight(HubCentre(millAngle, hubIndex), assemblyVerticalPositionMeters);
+
+    /// <summary>World-space position of a gondola pivot, preserving both planar rotations.</summary>
+    public static RideWorldPosition GondolaPivotWorldPosition(
+        double millAngle,
+        int hubIndex,
+        double hubAngle,
+        int gondolaIndex,
+        double assemblyVerticalPositionMeters) =>
+        WithAssemblyHeight(
+            PivotPosition(millAngle, hubIndex, hubAngle, gondolaIndex),
+            assemblyVerticalPositionMeters);
+
+    /// <summary>World-space position of one seat, with only the assembly height added.</summary>
+    public static RideWorldPosition SeatWorldPosition(
+        double millAngle,
+        int hubIndex,
+        double hubAngle,
+        int gondolaIndex,
+        double gondolaAngle,
+        SeatPosition seat,
+        double assemblyVerticalPositionMeters)
+    {
+        var pivot = PivotPosition(millAngle, hubIndex, hubAngle, gondolaIndex);
+        var worldFacing = millAngle + hubAngle + MountAngle(gondolaIndex) + gondolaAngle;
+        var lateralDirection = seat switch
+        {
+            SeatPosition.Left => 1d,
+            SeatPosition.Right => -1d,
+            _ => throw new ArgumentOutOfRangeException(nameof(seat))
+        };
+        var seatOffset = PlanarVector.FromAngle(worldFacing + HalfPi)
+            * (lateralDirection * RideParameters.SeatLateralOffset);
+
+        return WithAssemblyHeight(pivot + seatOffset, assemblyVerticalPositionMeters);
+    }
+
+    private static RideWorldPosition WithAssemblyHeight(
+        PlanarVector planarPosition,
+        double assemblyVerticalPositionMeters) =>
+        new(planarPosition.X, planarPosition.Y, assemblyVerticalPositionMeters);
 }
+
+/// <summary>A world-space ride position in metres, with +Z as the vertical axis.</summary>
+internal readonly record struct RideWorldPosition(double X, double Y, double Z);

@@ -50,6 +50,7 @@ public sealed class Ride : DomainModel
         };
 
     private readonly GreatMill _mill = new();
+    private readonly VerticalMotion _verticalMotion = new();
     private RideState _state = RideState.Idle;
     private double _simulationTimeSeconds;
 
@@ -69,6 +70,16 @@ public sealed class Ride : DomainModel
 
     /// <summary>The central mill (and, through it, the hubs and gondolas).</summary>
     public GreatMill Mill => _mill;
+
+    /// <summary>The assembly's world-vertical displacement from its neutral pose (m).</summary>
+    public double AssemblyVerticalPositionMeters => _verticalMotion.PositionMeters;
+
+    internal double AssemblyVerticalVelocityMetersPerSecond => _verticalMotion.VelocityMetersPerSecond;
+
+    internal double AssemblyVerticalAccelerationMetersPerSecondSquared =>
+        _verticalMotion.AccelerationMetersPerSecondSquared;
+
+    internal VerticalMotionPhase VerticalMotionPhase => _verticalMotion.Phase;
 
     /// <summary>Why the ride is (not) safe to start right now.</summary>
     public RideSafetyReason SafetyReason => EvaluateSafety();
@@ -358,6 +369,9 @@ public sealed class Ride : DomainModel
             throw new DomainValidationException("The simulation step must be positive.");
         }
 
+        var elapsedSeconds = dt.TotalSeconds;
+        _verticalMotion.Advance(elapsedSeconds);
+
         // 1. Natural behaviour depends on the lifecycle state: while loading, seated
         //    passengers secure their restraints; while offloading, they leave.
         switch (_state)
@@ -381,7 +395,15 @@ public sealed class Ride : DomainModel
         //    (releasing the safety constraints) once it reaches a complete rest.
         if (_state is RideState.Started or RideState.Stopping or RideState.EmergencyStop)
         {
-            _mill.AdvancePhysics(dt.TotalSeconds);
+            _mill.AdvancePhysics(
+                elapsedSeconds,
+                _verticalMotion.AccelerationMetersPerSecondSquared);
+
+            if (_state == RideState.Started && HasExceededGForceLimit())
+            {
+                EnterStopping();
+                _state = RideState.Stopping;
+            }
 
             if (_state is RideState.Stopping or RideState.EmergencyStop && _mill.IsAtRest)
             {
@@ -389,6 +411,14 @@ public sealed class Ride : DomainModel
                 EnterOffloading();
                 _state = RideState.Offloading;
             }
+        }
+        else
+        {
+            // The assembly can still be returning to neutral after the rotating
+            // structure has stopped; keep seat specific force synchronized without
+            // advancing any motor or passive rotational state.
+            _mill.ApplyAssemblyVerticalAcceleration(
+                _verticalMotion.AccelerationMetersPerSecondSquared);
         }
 
         // 4. Offloading returns to idle once the last rider has left.
@@ -430,7 +460,8 @@ public sealed class Ride : DomainModel
             _mill.BrakesEngaged,
             _mill.ToTelemetry(),
             hubs,
-            gondolas);
+            gondolas,
+            _verticalMotion.PositionMeters);
     }
 
     /// <summary>Runs the entry side-effects for the state being entered.</summary>
@@ -457,6 +488,7 @@ public sealed class Ride : DomainModel
     /// <summary>Locks the safety constraints, releases the engine brake, and releases the gondola brakes so the pods swing.</summary>
     private void EnterStarted()
     {
+        _verticalMotion.BeginRun();
         _mill.ReleaseBrakes();
         _mill.ReleaseAllGondolaBrakes();
     }
@@ -464,6 +496,7 @@ public sealed class Ride : DomainModel
     /// <summary>Cuts power and engages the engine brake for a fast, controlled ramp-down.</summary>
     private void EnterStopping()
     {
+        _verticalMotion.BeginReturnToNeutral();
         _mill.EngageBrakes();
         _mill.EngageAllGondolaBrakes();
     }
@@ -471,6 +504,7 @@ public sealed class Ride : DomainModel
     /// <summary>Immediately cuts power and engages the engine brake from an active state.</summary>
     private void EnterEmergencyStop()
     {
+        _verticalMotion.BeginReturnToNeutral();
         _mill.EngageBrakes();
         _mill.EngageAllGondolaBrakes();
     }
@@ -505,7 +539,34 @@ public sealed class Ride : DomainModel
             return RideSafetyReason.UnbalancedLoad;
         }
 
+        if (HasExceededGForceLimit())
+        {
+            return RideSafetyReason.OverG;
+        }
+
+        if (_state is RideState.Idle or RideState.Loading or RideState.Safe
+            && !_verticalMotion.IsNeutral)
+        {
+            return RideSafetyReason.VerticalMotionNotNeutral;
+        }
+
         return RideSafetyReason.None;
+    }
+
+    private bool HasExceededGForceLimit()
+    {
+        foreach (var hub in _mill.Hubs)
+        {
+            foreach (var gondola in hub.Gondolas)
+            {
+                if (gondola.ResultantG >= RideParameters.MaxGForce)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static string DescribeSafety(RideSafetyReason reason) => reason switch
@@ -513,6 +574,8 @@ public sealed class Ride : DomainModel
         RideSafetyReason.UnsecuredRestraint => "an occupied seat's restraint is not secured.",
         RideSafetyReason.UnbalancedLoad => "the load is distributed too unevenly across the arms.",
         RideSafetyReason.Overloaded => $"the combined passenger weight exceeds the {RideParameters.MaxPassengerLoadKg:0} kg maximum load.",
+        RideSafetyReason.OverG => $"a seat has reached the {RideParameters.MaxGForce:0.0} g maximum load.",
+        RideSafetyReason.VerticalMotionNotNeutral => "the assembly has not returned to neutral height.",
         RideSafetyReason.WrongState => "the ride is not in a startable state.",
         _ => "unknown reason.",
     };

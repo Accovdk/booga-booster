@@ -34,6 +34,32 @@ G = |f| / 9.81 = 1.0
 Exactly **1.0 g, upward** — the everyday sensation of sitting still. This is a hard test:
 with everything stopped, every one of the 32 seats must read `G = 1.000`.
 
+### Assembly lift contribution
+
+The assembly's vertical coordinate acceleration is shared by every seat. With +z up
+and gravity `g_z = −9.81 m/s²`, a vertical lift acceleration `a_z` contributes
+
+```
+f_z = a_z − g_z = 9.81 + a_z
+G_z = f_z / 9.81
+G_total = sqrt(G_forward² + G_lateral² + G_z²)
+```
+
+The lift uses `A=0.6 m`, `f=0.2 Hz`, and 4 s quintic smootherstep entry/exit
+envelopes (an interrupted entry uses a quintic Hermite return matching the current
+envelope and its first two derivatives). Across both transitions, including envelope
+acceleration, the bound is
+
+```
+|a_z| ≤ A · (5.773503/T² + 2·1.875·(2πf)/T + (2πf)²)
+     = 1.870847 m/s² = 0.190708 g < 0.2 g
+```
+
+This leaves the existing **4.5 g resultant-seat limit** as the single safety
+threshold: vertical and rotational loads are combined before the over-G check, and
+reaching that threshold engages the ride's existing controlled stopping path. At rest,
+`a_z=0` and the resulting vertical and total specific force remain exactly `1.0 g`.
+
 ---
 
 ## 5.2 Seat acceleration from the nested frames

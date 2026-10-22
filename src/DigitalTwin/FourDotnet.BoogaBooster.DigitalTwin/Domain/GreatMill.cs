@@ -306,7 +306,7 @@ public sealed class GreatMill : DomainModel
     }
 
     /// <summary>Advances the mill one physics step, then every hub (and its gondolas).</summary>
-    public void AdvancePhysics(double dt)
+    public void AdvancePhysics(double dt, double assemblyVerticalAccelerationMetersPerSecondSquared = 0d)
     {
         var drive = _direction.Sign() * RotationalDynamics.MotorTorque(
             _power.Fraction, _omega, RideParameters.MillStallTorque, RideParameters.MillMaxPowerWatts);
@@ -330,7 +330,24 @@ public sealed class GreatMill : DomainModel
 
         foreach (var hub in _hubs)
         {
-            hub.AdvancePhysics(_angle, _omega, _brakesEngaged, dt);
+            hub.AdvancePhysics(
+                _angle,
+                _omega,
+                _brakesEngaged,
+                dt,
+                assemblyVerticalAccelerationMetersPerSecondSquared);
+        }
+    }
+
+    /// <summary>Updates the lift-specific-force contribution without integrating rotation.</summary>
+    internal void ApplyAssemblyVerticalAcceleration(double accelerationMetersPerSecondSquared)
+    {
+        foreach (var hub in _hubs)
+        {
+            foreach (var gondola in hub.Gondolas)
+            {
+                gondola.ApplyAssemblyVerticalAcceleration(accelerationMetersPerSecondSquared);
+            }
         }
     }
 

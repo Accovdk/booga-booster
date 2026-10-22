@@ -25,6 +25,10 @@ number buried in the physics.
 |-----------|--------|--------:|------|
 | Timestep | `dt` | 1/120 | s |
 | Telemetry rate | — | 30 | Hz |
+| Vertical lift amplitude | `A` | 0.6 | m |
+| Vertical lift frequency | `f` | 0.2 | Hz |
+| Lift entry/exit transition | `T` | 4 | s |
+| Maximum vertical coordinate acceleration | — | 0.2 | g |
 | Mill stall torque | `τ_stall` | 60,000 | N·m |
 | Mill max power | `P_max` | 90 | kW |
 | Cart pivot damping | `c` | 900 | N·m·s/rad |
@@ -39,6 +43,30 @@ number buried in the physics.
 | Imbalance dispatch limit | — | 50 | mm |
 | Wind cutoff | `windMax` | 18 | m/s |
 | E-stop decel ramp | — | 8 | s |
+
+The lift multiplies `A·sin(2πft)` by a quintic smootherstep envelope
+`S(u)=6u⁵−15u⁴+10u³` during entry and by `1−S(u)` during return to neutral,
+where `u=t/T`. The oscillator phase is explicit simulation state and advances only
+on fixed physics ticks. It continues through each envelope so position and velocity
+match at the Entering/Running and Running/Exiting phase boundaries. If stopping
+interrupts entry, a quintic Hermite return matches the current envelope, rate, and
+acceleration before settling at zero. Transition completion is quantized to the
+nearest fixed physics tick.
+
+For the selected profile, a conservative analytic bound on the full entry/exit
+coordinate acceleration (including envelope acceleration and cross terms) is:
+
+```
+|a_vertical| ≤ A · (5.773503/T² + 2·1.875·(2πf)/T + (2πf)²)
+             = 1.870847 m/s² = 0.190708 g < 0.2 g
+```
+
+This is the bound on the **lift contribution**, not the total seat load. The rider's
+resultant specific force combines this vertical contribution with the existing
+horizontal rotational force and gravity, then uses the existing 4.5 g protection.
+The DigitalTwin tests sweep every fixed-step interruption point during entry and the
+corresponding return ticks against this bound. Therefore the 0.2 g lift allowance
+does not relax the combined-load safety limit.
 
 ## Loss-model coefficients
 

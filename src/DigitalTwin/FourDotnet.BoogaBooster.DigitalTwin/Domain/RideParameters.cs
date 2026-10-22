@@ -47,6 +47,33 @@ public static class RideParameters
     /// <summary>How often a telemetry snapshot is published.</summary>
     public static readonly TimeSpan TelemetryInterval = TimeSpan.FromSeconds(1d / 30d);
 
+    // --- Assembly vertical motion ---
+    /// <summary>Peak vertical displacement from the neutral assembly height (m).</summary>
+    public const double VerticalMotionAmplitudeMeters = 0.6d;
+
+    /// <summary>Vertical oscillation frequency (Hz).</summary>
+    public const double VerticalMotionFrequencyHz = 0.2d;
+
+    /// <summary>Duration of each smooth transition into or out of periodic motion (s).</summary>
+    public const double VerticalMotionTransitionSeconds = 4d;
+
+    /// <summary>The allowed vertical coordinate-acceleration envelope for the lift (g).</summary>
+    public const double VerticalMotionAccelerationLimitG = 0.2d;
+
+    /// <summary>
+    /// Conservative analytic acceleration bound for the smootherstep-envelope
+    /// sinusoid, in m/s². This is calculated once rather than on the physics hot path.
+    /// </summary>
+    public static readonly double VerticalMotionAccelerationBoundMetersPerSecondSquared =
+        VerticalMotionAmplitudeMeters
+        * (5.773503 / (VerticalMotionTransitionSeconds * VerticalMotionTransitionSeconds)
+            + (2d * 1.875d * 2d * Math.PI * VerticalMotionFrequencyHz / VerticalMotionTransitionSeconds)
+            + Math.Pow(2d * Math.PI * VerticalMotionFrequencyHz, 2d));
+
+    /// <summary>The analytic vertical-acceleration bound expressed in g.</summary>
+    public static readonly double VerticalMotionAccelerationBoundG =
+        VerticalMotionAccelerationBoundMetersPerSecondSquared / Gravity;
+
     // --- Mill motor & losses ---
     // The loss coefficients are sized against the mill's very large rotating inertia
     // (~1.65e5 kg·m² empty, ~3e5 loaded) so a de-powered mill coasts to rest in a
