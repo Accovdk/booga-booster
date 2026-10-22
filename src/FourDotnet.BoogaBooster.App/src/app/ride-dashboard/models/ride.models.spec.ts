@@ -70,6 +70,12 @@ function buildDto(overrides: Partial<RideTelemetryStreamDto> = {}): RideTelemetr
 }
 
 describe('mapRideTelemetry', () => {
+  it('preserves the assembly world-vertical position from the stream', () => {
+    const model = mapRideTelemetry(buildDto({ assemblyVerticalPositionMeters: 1.25 }));
+
+    expect(model.assemblyVerticalPositionMeters).toBe(1.25);
+  });
+
   it('maps lifecycle state and available transitions from numeric enums', () => {
     const model = mapRideTelemetry(buildDto({ state: 3, availableTransitions: [4, 6] }));
 

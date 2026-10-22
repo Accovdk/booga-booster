@@ -87,6 +87,14 @@ describe('RideStateService', () => {
     expect(service.state()).toBe('started');
   });
 
+  it('defaults assembly height to neutral when the telemetry frame omits it', () => {
+    expect(service.assemblyVerticalPositionMeters()).toBe(0);
+
+    source.setTelemetry(createTelemetry({ assemblyVerticalPositionMeters: 1.25 }));
+
+    expect(service.assemblyVerticalPositionMeters()).toBe(1.25);
+  });
+
   it('computes occupied seats and secured security state', () => {
     source.setTelemetry(createTelemetry({ gondolas: createGondolas(10) }));
 

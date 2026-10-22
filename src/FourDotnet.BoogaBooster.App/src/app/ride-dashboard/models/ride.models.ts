@@ -112,6 +112,8 @@ export interface RideTelemetry {
    * complete stop within a couple of seconds.
    */
   readonly brakesEngaged: boolean;
+  /** Ride assembly world-vertical position, in metres; absent on older frames. */
+  readonly assemblyVerticalPositionMeters?: number;
   /**
    * Total number of occupied seats across all gondolas, as streamed by the
    * backend. Optional so older frames/fixtures without the field still type
@@ -234,6 +236,8 @@ export interface RideTelemetryStreamDto {
   readonly gondolas: readonly RideTelemetryGondolaStreamDto[];
   readonly boardedPassengerCount: number;
   readonly brakesEngaged?: boolean;
+  /** Ride assembly world-vertical position, in metres; absent on older frames. */
+  readonly assemblyVerticalPositionMeters?: number;
 }
 
 /** The backend's `GondolaBrakeState` names in index order (`0=Engaged, 1=Released`). */
@@ -368,6 +372,7 @@ export function mapRideTelemetry(dto: RideTelemetryStreamDto): RideTelemetry {
     gondolaBrakeEngaged: dto.gondolas.every((gondola) => brakeEngaged(gondola.brake)),
     // Defaults to released for an older frame that doesn't carry the field.
     brakesEngaged: dto.brakesEngaged ?? false,
+    assemblyVerticalPositionMeters: dto.assemblyVerticalPositionMeters,
   };
 }
 

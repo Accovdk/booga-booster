@@ -46,6 +46,11 @@ export function rpmToRadPerSec(rpm: number): number {
   return (rpm / 60) * Math.PI * 2;
 }
 
+/** World-space height of the mill assembly, preserving its neutral elevation. */
+export function assemblyWorldY(positionMeters?: number): number {
+  return ARM_HEIGHT + finiteOrZero(positionMeters ?? 0);
+}
+
 /**
  * Coerces a non-finite number (`NaN`/`±Infinity`) to `0`; otherwise returns it
  * unchanged. A missing or corrupt telemetry frame must never inject a
@@ -132,6 +137,7 @@ export class RideVisualization {
   readonly hubSpeedRpm = input.required<number>();
   readonly hubDirection = input.required<MotorDirection>();
   readonly gondolaBrakeEngaged = input.required<boolean>();
+  readonly assemblyVerticalPositionMeters = input(0);
 
   private readonly hostRef = viewChild.required<ElementRef<HTMLDivElement>>('host');
   private readonly destroyRef = inject(DestroyRef);
@@ -209,6 +215,7 @@ export class RideVisualization {
 
       const braked = this.gondolaBrakeEngaged();
       mainPivot.rotation.y = mainA;
+      mainPivot.position.y = assemblyWorldY(this.assemblyVerticalPositionMeters());
       for (const hub of hubPivots) {
         hub.rotation.y = hubA;
       }

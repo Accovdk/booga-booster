@@ -98,6 +98,11 @@ export class RideStateService {
    */
   readonly brakesEngaged: Signal<boolean> = computed(() => this.telemetry().brakesEngaged);
 
+  /** Ride assembly's streamed world-vertical position, defaulting to neutral for older frames. */
+  readonly assemblyVerticalPositionMeters: Signal<number> = computed(
+    () => this.telemetry().assemblyVerticalPositionMeters ?? 0,
+  );
+
   /** Set the central mill power; value is clamped to 0–100 before dispatch. */
   setMillPower(value: number): void {
     this.source.applyCommand({ kind: 'set-mill-power', value: clampPower(value) });

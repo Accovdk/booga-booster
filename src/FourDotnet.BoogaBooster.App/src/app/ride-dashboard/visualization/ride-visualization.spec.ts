@@ -1,6 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { RideVisualization, angularVelocity, podFreeAngle, rpmToRadPerSec } from './ride-visualization';
+import {
+  RideVisualization,
+  angularVelocity,
+  assemblyWorldY,
+  podFreeAngle,
+  rpmToRadPerSec,
+} from './ride-visualization';
 
 describe('RideVisualization', () => {
   function render() {
@@ -25,6 +31,11 @@ describe('RideVisualization', () => {
   it('maps rpm to radians per second', () => {
     expect(rpmToRadPerSec(60)).toBeCloseTo(2 * Math.PI, 5);
     expect(rpmToRadPerSec(0)).toBe(0);
+  });
+
+  it('applies streamed assembly height as a world-space offset and defaults absent height to neutral', () => {
+    expect(assemblyWorldY(1.25) - assemblyWorldY(0)).toBeCloseTo(1.25, 5);
+    expect(assemblyWorldY(undefined)).toBe(assemblyWorldY(0));
   });
 
   it('derives angular velocity from signed rpm', () => {
