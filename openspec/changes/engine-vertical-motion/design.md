@@ -7,11 +7,13 @@ See proposal.md for motivation. The physics tick is currently deterministic at 1
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Add one vertical degree of freedom to the ride assembly without changing the nested rotational model.
 - Make vertical motion deterministic, lifecycle-aware, bounded by documented parameters, and visible to rider-force and safety calculations.
 - Expose the ride assembly height through the existing telemetry stream for the 3D visualization.
 
 **Non-Goals:**
+
 - Add independent vertical motion to hubs, gondolas, or seats.
 - Add operator controls for lift amplitude, speed, or direction.
 - Change the telemetry transport or introduce a separate animation source.

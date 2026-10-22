@@ -13,9 +13,11 @@ The ride currently rotates entirely in the horizontal plane, so the visitor neve
 ## Capabilities
 
 ### New Capabilities
+
 - `engine-vertical-motion`: Defines the ride assembly's vertical motion profile, lifecycle, determinism, and physical effects.
 
 ### Modified Capabilities
+
 - `ride-telemetry-streaming`: Add the assembly's vertical position to the full telemetry snapshot for visualization.
 
 ## Impact
