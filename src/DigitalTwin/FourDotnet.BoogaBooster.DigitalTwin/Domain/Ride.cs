@@ -433,7 +433,8 @@ public sealed class Ride : DomainModel
             _mill.BrakesEngaged,
             _mill.ToTelemetry(),
             hubs,
-            gondolas);
+            gondolas,
+            _mill.Lift.Height);
     }
 
     /// <summary>Runs the entry side-effects for the state being entered.</summary>

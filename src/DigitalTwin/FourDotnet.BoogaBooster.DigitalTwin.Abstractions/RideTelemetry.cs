@@ -26,6 +26,12 @@ namespace FourDotnet.BoogaBooster.DigitalTwin.Abstractions;
 /// <param name="Mill">The central mill's telemetry.</param>
 /// <param name="Hubs">The four hubs' telemetry.</param>
 /// <param name="Gondolas">The sixteen gondolas' telemetry.</param>
+/// <param name="AssemblyHeightMeters">
+/// The whole ride assembly's world-vertical position in metres above its neutral
+/// (resting) height — 0 at rest, rising while the ride runs. Serialized as
+/// <c>assemblyHeightMeters</c>. Added last with a default so existing constructions
+/// and older consumers remain compatible.
+/// </param>
 public sealed record RideTelemetry(
     RideState State,
     double SimulationTimeSeconds,
@@ -36,4 +42,5 @@ public sealed record RideTelemetry(
     bool BrakesEngaged,
     MillTelemetry Mill,
     IReadOnlyList<HubTelemetry> Hubs,
-    IReadOnlyList<GondolaTelemetry> Gondolas);
+    IReadOnlyList<GondolaTelemetry> Gondolas,
+    double AssemblyHeightMeters = 0d);

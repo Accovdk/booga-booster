@@ -12,7 +12,7 @@
 
 ## 3. Telemetry and Visualization
 
-- [ ] 3.1 Add assembly world-vertical position to the telemetry contract and snapshot; verify serialized SSE frames include the current height.
+- [x] 3.1 Add assembly world-vertical position to the telemetry contract and snapshot; verify serialized SSE frames include the current height.
 - [ ] 3.2 Apply streamed assembly height as a world-space offset in the 3D visualization; verify the ride moves with telemetry and remains at neutral height when height is absent.
 
 ## 4. Integration Verification
