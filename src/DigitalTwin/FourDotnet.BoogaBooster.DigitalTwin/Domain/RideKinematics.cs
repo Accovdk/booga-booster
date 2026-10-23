@@ -25,6 +25,32 @@ internal static class RideKinematics
         return hubCentre + (PlanarVector.FromAngle(armWorldAngle) * RideParameters.HubArmLength);
     }
 
+    /// <summary>World position of the mill's spin axis (at the assembly height).</summary>
+    public static WorldPoint MillAxisWorld(double assemblyHeight)
+        => WorldPoint.FromPlanar(PlanarVector.Zero, assemblyHeight);
+
+    /// <summary>World position of hub <paramref name="hubIndex"/>'s centre at the given assembly height.</summary>
+    public static WorldPoint HubCentreWorld(double millAngle, int hubIndex, double assemblyHeight)
+        => WorldPoint.FromPlanar(HubCentre(millAngle, hubIndex), assemblyHeight);
+
+    /// <summary>World position of a gondola pivot at the given assembly height.</summary>
+    public static WorldPoint PivotWorld(
+        double millAngle, int hubIndex, double hubAngle, int gondolaIndex, double assemblyHeight)
+        => WorldPoint.FromPlanar(PivotPosition(millAngle, hubIndex, hubAngle, gondolaIndex), assemblyHeight);
+
+    /// <summary>
+    /// World position of a seat: the gondola pivot offset sideways by
+    /// <see cref="RideParameters.SeatLateralOffset"/> (left is +, right is −) in the
+    /// gondola's own frame, at the assembly height.
+    /// </summary>
+    public static WorldPoint SeatWorld(
+        PlanarVector pivot, double gondolaWorldFacing, bool left, double assemblyHeight)
+    {
+        var side = left ? RideParameters.SeatLateralOffset : -RideParameters.SeatLateralOffset;
+        var offset = PlanarVector.FromAngle(gondolaWorldFacing + HalfPi) * side;
+        return WorldPoint.FromPlanar(pivot + offset, assemblyHeight);
+    }
+
     /// <summary>
     /// The outward horizontal acceleration field at a pivot — the vector sum of the
     /// mill and hub centripetal contributions, each pointing away from its own axis

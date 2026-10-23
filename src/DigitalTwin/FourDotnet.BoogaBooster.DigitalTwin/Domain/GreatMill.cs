@@ -47,6 +47,34 @@ public sealed class GreatMill : DomainModel
     /// <summary>The vertical lift of the whole assembly (height, velocity, acceleration, phase).</summary>
     public AssemblyLift Lift => _lift;
 
+    /// <summary>World position of the mill axis, including the assembly height.</summary>
+    public WorldPoint AxisWorldPosition => RideKinematics.MillAxisWorld(_lift.Height);
+
+    /// <summary>World position of hub <paramref name="hubIndex"/>'s centre, including the assembly height.</summary>
+    public WorldPoint HubWorldPosition(int hubIndex)
+    {
+        _ = GetHub(hubIndex);
+        return RideKinematics.HubCentreWorld(_angle, hubIndex, _lift.Height);
+    }
+
+    /// <summary>World position of a gondola's pivot, including the assembly height.</summary>
+    public WorldPoint GondolaWorldPosition(int hubIndex, int gondolaIndex)
+    {
+        var hub = GetHub(hubIndex);
+        _ = hub.Gondolas[gondolaIndex];
+        return RideKinematics.PivotWorld(_angle, hubIndex, hub.Angle, gondolaIndex, _lift.Height);
+    }
+
+    /// <summary>World position of a seat, including the assembly height.</summary>
+    public WorldPoint SeatWorldPosition(int hubIndex, int gondolaIndex, SeatPosition seat)
+    {
+        var hub = GetHub(hubIndex);
+        var gondola = hub.Gondolas[gondolaIndex];
+        var pivot = RideKinematics.PivotPosition(_angle, hubIndex, hub.Angle, gondolaIndex);
+        var facing = _angle + hub.Angle + RideKinematics.MountAngle(gondolaIndex) + gondola.Angle;
+        return RideKinematics.SeatWorld(pivot, facing, seat == SeatPosition.Left, _lift.Height);
+    }
+
     /// <summary>The four hubs.</summary>
     public IReadOnlyList<Hub> Hubs => _hubs;
 
