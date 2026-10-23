@@ -22,7 +22,7 @@ public sealed class Gondola : DomainModel
     private double _omega;       // ω_cart — emergent yaw rate (rad/s)
     private double _lateralG;
     private double _forwardG;
-
+    private double _verticalG = 1d;  // at rest a seat reads exactly 1 g, upward
     public Gondola(int hubIndex, int index)
         : base(isNew: true)
     {
@@ -65,6 +65,22 @@ public sealed class Gondola : DomainModel
 
     /// <summary>Fore/aft specific force felt by riders (g). Updated each physics tick.</summary>
     public double ForwardG => _forwardG;
+
+    /// <summary>
+    /// Vertical specific force felt by riders (g): <c>(g + a_z) / g</c>, where
+    /// <c>a_z</c> is the assembly's vertical coordinate acceleration, added to the seat's
+    /// world acceleration before gravity is subtracted. Exactly 1 at rest.
+    /// </summary>
+    public double VerticalG => _verticalG;
+
+    /// <summary>
+    /// The total felt load (g): the magnitude of the combined forward, lateral and
+    /// vertical specific force. Exactly 1 at rest.
+    /// </summary>
+    public double FeltG => Math.Sqrt((_forwardG * _forwardG) + (_lateralG * _lateralG) + (_verticalG * _verticalG));
+
+    /// <summary><c>true</c> when the combined felt load has reached <see cref="RideParameters.MaxGForce"/>.</summary>
+    public bool ExceedsGForceLimit => FeltG >= RideParameters.MaxGForce;
 
     /// <summary>Total measured passenger weight in the gondola.</summary>
     public double PassengerLoadKg => _left.OccupiedKg + _right.OccupiedKg;
@@ -138,8 +154,17 @@ public sealed class Gondola : DomainModel
     /// Advances the gondola's swing by <paramref name="dt"/> seconds, given the
     /// mill's and its hub's current angles and speeds. Updates the felt G-forces
     /// every call; integrates the pendulum only when the brake is released.
+    /// <paramref name="verticalAcceleration"/> is the assembly's vertical coordinate
+    /// acceleration (m/s², up positive), which joins the seat's world acceleration
+    /// before gravity is subtracted.
     /// </summary>
-    public void AdvancePhysics(double millAngle, double millOmega, double hubAngle, double hubOmega, double dt)
+    public void AdvancePhysics(
+        double millAngle,
+        double millOmega,
+        double hubAngle,
+        double hubOmega,
+        double dt,
+        double verticalAcceleration = 0d)
     {
         var pivot = RideKinematics.PivotPosition(millAngle, HubIndex, hubAngle, Index);
         var hubCentre = RideKinematics.HubCentre(millAngle, HubIndex);
@@ -148,7 +173,7 @@ public sealed class Gondola : DomainModel
         var (comDistance, comAngle) = CentreOfMass();
         var worldFacing = millAngle + hubAngle + RideKinematics.MountAngle(Index) + _angle;
 
-        UpdateGForces(field, worldFacing, comAngle, comDistance);
+        UpdateGForces(field, worldFacing, comAngle, comDistance, verticalAcceleration);
 
         if (_brake == GondolaBrakeState.Engaged)
         {
@@ -197,7 +222,12 @@ public sealed class Gondola : DomainModel
             millAngle + hubAngle + RideKinematics.MountAngle(Index) + _angle + comAngle);
     }
 
-    private void UpdateGForces(PlanarVector field, double worldFacing, double comAngle, double comDistance)
+    private void UpdateGForces(
+        PlanarVector field,
+        double worldFacing,
+        double comAngle,
+        double comDistance,
+        double verticalAcceleration)
     {
         // Horizontal specific force ≈ the centrifugal field at the pivot plus the
         // gondola's own swing term at the seats (which sit near the centre of mass).
@@ -209,6 +239,9 @@ public sealed class Gondola : DomainModel
 
         _forwardG = specific.Dot(forwardHat) / RideParameters.Gravity;
         _lateralG = specific.Dot(lateralHat) / RideParameters.Gravity;
+
+        // f = a − g with g = (0, 0, −9.81): the vertical component is a_z + g.
+        _verticalG = (RideParameters.Gravity + verticalAcceleration) / RideParameters.Gravity;
     }
 
     /// <summary>

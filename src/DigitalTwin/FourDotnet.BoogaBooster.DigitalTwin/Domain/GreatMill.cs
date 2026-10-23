@@ -115,6 +115,33 @@ public sealed class GreatMill : DomainModel
     /// </summary>
     public bool IsOverloaded => PassengerLoadKg > RideParameters.MaxPassengerLoadKg;
 
+    /// <summary>
+    /// The highest combined felt load (g) across all sixteen gondolas' seats — the value
+    /// the over-G limit is judged against. Exactly 1 for a ride at rest.
+    /// </summary>
+    public double PeakFeltG
+    {
+        get
+        {
+            var peak = 0d;
+            foreach (var hub in _hubs)
+            {
+                foreach (var gondola in hub.Gondolas)
+                {
+                    peak = Math.Max(peak, gondola.FeltG);
+                }
+            }
+
+            return peak;
+        }
+    }
+
+    /// <summary>
+    /// <c>true</c> when any seat's combined rotational-plus-vertical load has reached
+    /// <see cref="RideParameters.MaxGForce"/>.
+    /// </summary>
+    public bool IsOverG => PeakFeltG >= RideParameters.MaxGForce;
+
     /// <summary>Electrical power the mill motor is consuming (watts).</summary>
     public double ConsumedPowerWatts => _power.ToWatts(RideParameters.MillMaxPowerWatts);
 
@@ -364,7 +391,7 @@ public sealed class GreatMill : DomainModel
 
         foreach (var hub in _hubs)
         {
-            hub.AdvancePhysics(_angle, _omega, _brakesEngaged, dt);
+            hub.AdvancePhysics(_angle, _omega, _brakesEngaged, dt, _lift.Acceleration);
         }
     }
 

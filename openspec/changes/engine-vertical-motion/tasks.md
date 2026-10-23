@@ -8,7 +8,7 @@
 ## 2. Kinematics and Rider Safety
 
 - [x] 2.1 Apply assembly height to world-space positions without changing nested geometry; verify every component receives the same vertical displacement.
-- [ ] 2.2 Include lift acceleration in seat specific-force calculations and the existing safety path; verify rest remains 1.0 g and tests cover combined-load threshold behavior.
+- [x] 2.2 Include lift acceleration in seat specific-force calculations and the existing safety path; verify rest remains 1.0 g and tests cover combined-load threshold behavior.
 
 ## 3. Telemetry and Visualization
 

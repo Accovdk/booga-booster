@@ -67,8 +67,9 @@ G_vertical = (9.81 + z̈) / 9.81       G_felt = √(G_forward² + G_lateral² + 
 ```
 
 At rest `z̈ = 0`, so `G_vertical = 1.0` and `G_felt = 1.000` — the rest sensation is
-preserved. The same `G_max = 4.5 g` limit applies to the combined `G_felt`; there is no
-separate lift limit.
+preserved. The same `G_max = 4.5 g` limit applies to the combined `G_felt` (`Gondola.FeltG`,
+`Gondola.ExceedsGForceLimit`, `GreatMill.PeakFeltG`/`IsOverG`); there is no separate lift
+limit.
 
 ## 6.6 Force envelope
 

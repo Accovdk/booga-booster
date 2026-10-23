@@ -163,7 +163,12 @@ public sealed class Hub : DomainModel
     /// speed are threaded through because the gondola field depends on them, and the
     /// engine-brake flag because the hubs brake together with the mill.
     /// </summary>
-    public void AdvancePhysics(double millAngle, double millOmega, bool brakesEngaged, double dt)
+    public void AdvancePhysics(
+        double millAngle,
+        double millOmega,
+        bool brakesEngaged,
+        double dt,
+        double verticalAcceleration = 0d)
     {
         var drive = _direction.Sign() * RotationalDynamics.MotorTorque(
             _power.Fraction, _omega, RideParameters.HubStallTorque, RideParameters.HubMaxPowerWatts);
@@ -187,7 +192,7 @@ public sealed class Hub : DomainModel
 
         foreach (var gondola in _gondolas)
         {
-            gondola.AdvancePhysics(millAngle, millOmega, _angle, _omega, dt);
+            gondola.AdvancePhysics(millAngle, millOmega, _angle, _omega, dt, verticalAcceleration);
         }
     }
 
