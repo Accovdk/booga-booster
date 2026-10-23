@@ -48,10 +48,10 @@ number buried in the physics.
 | Stroke (peak height above neutral) | `LiftStrokeMeters` | 1.5 | m |
 | Cycle period | `LiftPeriodSeconds` | 8 | s |
 | Angular frequency (derived, 2π/T) | `LiftAngularFrequency` | 0.7854 | rad/s |
-| Return-to-neutral time | `LiftReturnSeconds` | 6 | s |
+| Return-to-neutral | finishes the current cosine cycle (≤ one period) | ≤ 8 | s |
 | Lift acceleration budget | `LiftMaxAccelerationG` | 0.10 | g |
 
-Peak running acceleration 0.463 m/s² (0.047 g); worst interrupted return ≈ 0.055 g.
+Peak lift acceleration 0.463 m/s² (0.047 g), identical while returning.
 
 ## Loss-model coefficients
 

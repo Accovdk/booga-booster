@@ -125,16 +125,9 @@ public static class RideParameters
     public const double LiftAngularFrequency = 2d * Math.PI / LiftPeriodSeconds;
 
     /// <summary>
-    /// Time the assembly takes to glide back to neutral after the run ends or is
-    /// interrupted (s). A cubic Hermite blend with zero end velocity; long enough that
-    /// the worst-case interruption stays inside <see cref="LiftMaxAccelerationG"/>.
-    /// </summary>
-    public const double LiftReturnSeconds = 6d;
-
-    /// <summary>
     /// Budget for the vertical acceleration the lift may add to a seat's felt load, in
-    /// g. Peak running acceleration is ≈ 0.047 g and the worst interrupted return
-    /// ≈ 0.055 g, both inside this budget.
+    /// g. Running (and therefore returning, which finishes the same cosine cycle) peaks
+    /// at ≈ 0.047 g, well inside this budget.
     /// </summary>
     public const double LiftMaxAccelerationG = 0.1d;
 

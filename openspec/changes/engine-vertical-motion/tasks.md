@@ -3,7 +3,7 @@
 ## 1. Deterministic Vertical Motion
 
 - [x] 1.1 Derive and document lift amplitude, frequency, and transition timing in the physics parameters and `docs/`; verify the peak vertical acceleration stays within the documented force envelope.
-- [ ] 1.2 Add vertical position, velocity, acceleration, and lifecycle phase to simulation state; implement bounded fixed-timestep motion and smooth entry/return-to-neutral behavior, with deterministic replay and continuity tests.
+- [x] 1.2 Add vertical position, velocity, acceleration, and lifecycle phase to simulation state; implement bounded fixed-timestep motion and smooth entry/return-to-neutral behavior, with deterministic replay and continuity tests.
 
 ## 2. Kinematics and Rider Safety
 

@@ -383,7 +383,10 @@ public sealed class Ride : DomainModel
         {
             _mill.AdvancePhysics(dt.TotalSeconds);
 
-            if (_state is RideState.Stopping or RideState.EmergencyStop && _mill.IsAtRest)
+            // Riders only unload once the platform is also back at neutral height.
+            if (_state is RideState.Stopping or RideState.EmergencyStop
+                && _mill.IsAtRest
+                && _mill.Lift.IsNeutral)
             {
                 _mill.EngageAllGondolaBrakes();
                 EnterOffloading();
@@ -459,6 +462,7 @@ public sealed class Ride : DomainModel
     {
         _mill.ReleaseBrakes();
         _mill.ReleaseAllGondolaBrakes();
+        _mill.Lift.BeginRunning();
     }
 
     /// <summary>Cuts power and engages the engine brake for a fast, controlled ramp-down.</summary>
@@ -466,6 +470,7 @@ public sealed class Ride : DomainModel
     {
         _mill.EngageBrakes();
         _mill.EngageAllGondolaBrakes();
+        _mill.Lift.BeginReturning();
     }
 
     /// <summary>Immediately cuts power and engages the engine brake from an active state.</summary>
@@ -473,6 +478,7 @@ public sealed class Ride : DomainModel
     {
         _mill.EngageBrakes();
         _mill.EngageAllGondolaBrakes();
+        _mill.Lift.BeginReturning();
     }
 
     /// <summary>The ride is at rest: releases the engine brake and the safety constraints so passengers can leave.</summary>

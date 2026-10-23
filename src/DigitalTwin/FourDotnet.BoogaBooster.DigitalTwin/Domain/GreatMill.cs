@@ -17,6 +17,7 @@ public sealed class GreatMill : DomainModel
     private bool _brakesEngaged;
     private double _angle;
     private double _omega;
+    private readonly AssemblyLift _lift = new();
 
     public GreatMill()
         : base(isNew: true)
@@ -42,6 +43,9 @@ public sealed class GreatMill : DomainModel
 
     /// <summary>Current rotation speed (rad/s).</summary>
     public double AngularVelocity => _omega;
+
+    /// <summary>The vertical lift of the whole assembly (height, velocity, acceleration, phase).</summary>
+    public AssemblyLift Lift => _lift;
 
     /// <summary>The four hubs.</summary>
     public IReadOnlyList<Hub> Hubs => _hubs;
@@ -327,6 +331,8 @@ public sealed class GreatMill : DomainModel
 
         _omega = step.Omega;
         _angle = step.Theta;
+
+        _lift.Advance(dt);
 
         foreach (var hub in _hubs)
         {

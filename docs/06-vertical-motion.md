@@ -16,7 +16,7 @@ The authoritative state is `(z, ż, z̈, phase)`, advanced on the fixed `dt = 1/
 |-------|---------|--------------|
 | `Neutral` | at rest at neutral height, `z = ż = z̈ = 0` | initially; after a return completes |
 | `Running` | periodic rise-and-fall | the ride enters `Started` |
-| `Returning` | gliding back to neutral | the ride enters `Stopping` or `EmergencyStop` |
+| `Returning` | finishing the cosine cycle down to neutral | the ride enters `Stopping` or `EmergencyStop` |
 
 The ride does not move from `Stopping`/`EmergencyStop` to `Offloading` until the mill is
 at rest **and** the lift is back at `Neutral`, so riders never unload from a moving platform.
@@ -40,23 +40,15 @@ Peak running acceleration: `(A/2)·ω² = 0.75 × 0.6169 = 0.463 m/s² = 0.047 g
 
 ## 6.3 Return to neutral (including interrupted cycles)
 
-When the run ends — normally or part-way through a cycle — the current `(z₀, ż₀)` is
-blended to `(0, 0)` over `T_r = 6 s` with a cubic Hermite curve (`s = τ/T_r ∈ [0,1]`):
-
-```
-z(s) = z₀·h₀₀(s) + T_r·ż₀·h₁₀(s)       h₀₀ = 2s³ − 3s² + 1,   h₁₀ = s³ − 2s² + s
-```
-
-Position and velocity are continuous at both ends (start: `z₀, ż₀`; end: `0, 0`).
-Acceleration is linear in `s` so its maximum is at an endpoint:
-
-```
-z̈(0) = (−6·z₀ − 4·T_r·ż₀) / T_r²     z̈(1) = (6·z₀ + 2·T_r·ż₀) / T_r²
-```
-
-Worst case over every interruption point on the running cycle (`z₀ = (A/2)(1−cos φ)`,
-`ż₀ = (A/2)ω sin φ`): `|z̈| ≈ 0.54 m/s² ≈ 0.055 g` (verified numerically by the test suite).
-If the ride is already `Neutral` the return is a no-op.
+When the run ends — normally or part-way through a cycle — the lift does **not** restart
+or blend: it keeps following the same cosine until the cycle reaches its bottom
+(`ωτ = 2π`), where `z = ż = 0` exactly, and then settles to `Neutral`. Because the state
+is never replaced, position and velocity stay continuous at the interruption and at
+arrival, the height never drops below neutral, and the acceleration stays inside the
+running envelope (`≤ 0.047 g`). The return therefore takes at most one period `T = 8 s`
+(a blended return was rejected: a cubic Hermite glide from a descending state undershoots
+below neutral). If the lift never left neutral, it settles immediately; at `Neutral`
+the call is a no-op.
 
 ## 6.4 World-space composition
 
@@ -83,8 +75,8 @@ separate lift limit.
 Lift adds at most `LiftMaxAccelerationG = 0.10 g` to the vertical specific force, so
 `G_vertical ∈ [0.90, 1.10]`. Because it is added in quadrature to the horizontal load,
 the effect on the total is `≈ (G_v² − 1)/(2·G_h)`: even at `G_h = 4.4 g` it moves the
-total by under `0.03 g`. Chosen peaks (0.047 g running, ≈ 0.055 g interrupted return)
-stay inside the budget; tests assert this.
+total by under `0.03 g`. The chosen peak (0.047 g, running and returning alike) stays
+inside the budget; tests assert this for every interruption point.
 
 ---
 

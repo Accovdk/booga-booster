@@ -24,6 +24,6 @@ public class LiftParametersTests
     public void LiftBudget_StaysSmallComparedWithTheOverGLimit()
     {
         Assert.True(RideParameters.LiftMaxAccelerationG < RideParameters.MaxGForce);
-        Assert.True(RideParameters.LiftReturnSeconds > 0d);
+        Assert.True(RideParameters.LiftPeriodSeconds > 0d);
     }
 }
