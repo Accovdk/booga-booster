@@ -231,6 +231,13 @@ describe('mapRideTelemetry', () => {
     expect(model.brakesEngaged).toBe(false);
   });
 
+  it('maps assemblyHeightMeters from the wire field and leaves it absent on older frames', () => {
+    expect(mapRideTelemetry(buildDto({ assemblyHeightMeters: 1.25 })).assemblyHeightMeters).toBe(
+      1.25,
+    );
+    expect(mapRideTelemetry(buildDto()).assemblyHeightMeters).toBeUndefined();
+  });
+
   it('preserves the gondola and seat counts', () => {
     const model = mapRideTelemetry(buildDto());
     expect(model.gondolas).toHaveLength(GONDOLA_COUNT);

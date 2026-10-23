@@ -92,6 +92,12 @@ export class RideStateService {
     () => this.telemetry().gondolaBrakeEngaged,
   );
 
+  /** Streamed assembly world-vertical offset in metres; `0` (neutral) when absent or non-finite. */
+  readonly assemblyHeightMeters: Signal<number> = computed(() => {
+    const height = this.telemetry().assemblyHeightMeters;
+    return typeof height === 'number' && Number.isFinite(height) ? height : 0;
+  });
+
   /**
    * Whether the engine brake is engaged: drive power is cut and a strong
    * brake torque is applied, bringing the ride to a fast, complete stop.

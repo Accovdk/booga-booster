@@ -119,6 +119,12 @@ export interface RideTelemetry {
    * it is absent (see `RideStateService.occupiedSeats`).
    */
   readonly boardedPassengerCount?: number;
+  /**
+   * World-vertical position of the whole ride assembly in metres (neutral =
+   * `0`). Optional so older frames without the field still type check;
+   * consumers treat an absent or non-finite value as neutral.
+   */
+  readonly assemblyHeightMeters?: number;
 }
 
 /**
@@ -234,6 +240,8 @@ export interface RideTelemetryStreamDto {
   readonly gondolas: readonly RideTelemetryGondolaStreamDto[];
   readonly boardedPassengerCount: number;
   readonly brakesEngaged?: boolean;
+  /** Assembly world-vertical position in metres; absent on older frames. */
+  readonly assemblyHeightMeters?: number;
 }
 
 /** The backend's `GondolaBrakeState` names in index order (`0=Engaged, 1=Released`). */
@@ -368,6 +376,8 @@ export function mapRideTelemetry(dto: RideTelemetryStreamDto): RideTelemetry {
     gondolaBrakeEngaged: dto.gondolas.every((gondola) => brakeEngaged(gondola.brake)),
     // Defaults to released for an older frame that doesn't carry the field.
     brakesEngaged: dto.brakesEngaged ?? false,
+    // Kept optional: absent stays absent; the renderer treats it as neutral.
+    assemblyHeightMeters: dto.assemblyHeightMeters,
   };
 }
 

@@ -51,6 +51,19 @@ describe('RideStateService', () => {
     expect(service.hubDirection()).toBe('reverse');
   });
 
+  it('exposes the streamed assembly height, neutral when absent or non-finite', () => {
+    expect(service.assemblyHeightMeters()).toBe(0);
+
+    source.setTelemetry(createTelemetry({ assemblyHeightMeters: 0.8 }));
+    expect(service.assemblyHeightMeters()).toBe(0.8);
+
+    source.setTelemetry(createTelemetry({ assemblyHeightMeters: NaN }));
+    expect(service.assemblyHeightMeters()).toBe(0);
+
+    source.setTelemetry(createTelemetry({ assemblyHeightMeters: -0.5 }));
+    expect(service.assemblyHeightMeters()).toBe(-0.5);
+  });
+
   it('engages and releases the gondola brake', () => {
     expect(service.gondolaBrakeEngaged()).toBe(false);
 

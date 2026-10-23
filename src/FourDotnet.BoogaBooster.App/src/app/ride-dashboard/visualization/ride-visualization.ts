@@ -81,6 +81,19 @@ export function podFreeAngle(comboA: number, phase: number): number {
   return -comboA + Math.sin(comboA + phase);
 }
 
+/**
+ * World-space Y offset (metres) for the whole ride assembly from the streamed
+ * height. Absent (`undefined`) or non-finite heights are neutral (`0`).
+ */
+export function assemblyOffsetY(heightMeters: number | undefined): number {
+  return heightMeters === undefined ? 0 : finiteOrZero(heightMeters);
+}
+
+/** Applies the assembly height to the single ride root group (one offset for every component). */
+export function applyAssemblyHeight(root: THREE.Object3D, heightMeters: number | undefined): void {
+  root.position.y = assemblyOffsetY(heightMeters);
+}
+
 interface GondolaNode {
   readonly obj: THREE.Object3D;
   readonly phase: number;
@@ -132,6 +145,8 @@ export class RideVisualization {
   readonly hubSpeedRpm = input.required<number>();
   readonly hubDirection = input.required<MotorDirection>();
   readonly gondolaBrakeEngaged = input.required<boolean>();
+  /** Streamed assembly world-vertical offset (m); neutral `0` when absent. */
+  readonly assemblyHeightMeters = input<number | undefined>(0);
 
   private readonly hostRef = viewChild.required<ElementRef<HTMLDivElement>>('host');
   private readonly destroyRef = inject(DestroyRef);
@@ -183,8 +198,12 @@ export class RideVisualization {
 
     this.addLighting(scene);
     this.addGround(scene);
-    this.addStaticStructure(scene);
-    const { mainPivot, hubPivots, gondolas } = this.addRig(scene);
+    // Ground, lighting and camera stay fixed in the world; the whole ride
+    // (base, tower, mill, hubs, gondolas) lives under one root that is lifted.
+    const rideRoot = new THREE.Group();
+    scene.add(rideRoot);
+    this.addStaticStructure(rideRoot);
+    const { mainPivot, hubPivots, gondolas } = this.addRig(rideRoot);
 
     const reducedMotion =
       typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -208,6 +227,7 @@ export class RideVisualization {
       }
 
       const braked = this.gondolaBrakeEngaged();
+      applyAssemblyHeight(rideRoot, this.assemblyHeightMeters());
       mainPivot.rotation.y = mainA;
       for (const hub of hubPivots) {
         hub.rotation.y = hubA;
@@ -298,7 +318,7 @@ export class RideVisualization {
     scene.add(ground);
   }
 
-  private addStaticStructure(scene: THREE.Scene): void {
+  private addStaticStructure(scene: THREE.Object3D): void {
     const mats = this.materials();
     const base = this.box(P.baseSize, P.baseHeight, P.baseSize, mats.base);
     base.position.y = P.baseHeight / 2;
@@ -313,7 +333,7 @@ export class RideVisualization {
     scene.add(motor);
   }
 
-  private addRig(scene: THREE.Scene): {
+  private addRig(scene: THREE.Object3D): {
     mainPivot: THREE.Group;
     hubPivots: THREE.Group[];
     gondolas: GondolaNode[];
