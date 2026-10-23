@@ -40,6 +40,19 @@ number buried in the physics.
 | Wind cutoff | `windMax` | 18 | m/s |
 | E-stop decel ramp | — | 8 | s |
 
+## Vertical lift (doc 6)
+
+| Parameter | Constant | Default | Unit |
+|-----------|----------|--------:|------|
+| Neutral height | `LiftNeutralHeightMeters` | 0 | m |
+| Stroke (peak height above neutral) | `LiftStrokeMeters` | 1.5 | m |
+| Cycle period | `LiftPeriodSeconds` | 8 | s |
+| Angular frequency (derived, 2π/T) | `LiftAngularFrequency` | 0.7854 | rad/s |
+| Return-to-neutral time | `LiftReturnSeconds` | 6 | s |
+| Lift acceleration budget | `LiftMaxAccelerationG` | 0.10 | g |
+
+Peak running acceleration 0.463 m/s² (0.047 g); worst interrupted return ≈ 0.055 g.
+
 ## Loss-model coefficients
 
 Not fixed by the plan — picked to give the sanity-check behaviour below and locked in as the

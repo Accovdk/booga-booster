@@ -107,6 +107,37 @@ public static class RideParameters
     /// </summary>
     public const double MaxPassengerLoadKg = 3200d;
 
+    // --- Vertical lift of the whole assembly (docs/06-vertical-motion.md) ---
+    // The assembly rises from its neutral height and returns once per period:
+    //   z(t) = (A/2)(1 - cos(w t)),  w = 2π/T   →  z ∈ [0, A], starts at rest.
+    // Peak running acceleration is (A/2)·w², chosen to stay inside LiftMaxAccelerationG.
+
+    /// <summary>Neutral (rest) height of the assembly above its resting datum (m).</summary>
+    public const double LiftNeutralHeightMeters = 0d;
+
+    /// <summary>Peak-to-peak stroke: the assembly rises this far above neutral at the top of a cycle (m).</summary>
+    public const double LiftStrokeMeters = 1.5d;
+
+    /// <summary>Duration of one full rise-and-fall cycle while running (s).</summary>
+    public const double LiftPeriodSeconds = 8d;
+
+    /// <summary>Angular frequency of the lift cycle (rad/s) = 2π / period.</summary>
+    public const double LiftAngularFrequency = 2d * Math.PI / LiftPeriodSeconds;
+
+    /// <summary>
+    /// Time the assembly takes to glide back to neutral after the run ends or is
+    /// interrupted (s). A cubic Hermite blend with zero end velocity; long enough that
+    /// the worst-case interruption stays inside <see cref="LiftMaxAccelerationG"/>.
+    /// </summary>
+    public const double LiftReturnSeconds = 6d;
+
+    /// <summary>
+    /// Budget for the vertical acceleration the lift may add to a seat's felt load, in
+    /// g. Peak running acceleration is ≈ 0.047 g and the worst interrupted return
+    /// ≈ 0.055 g, both inside this budget.
+    /// </summary>
+    public const double LiftMaxAccelerationG = 0.1d;
+
     // --- Natural passenger behaviour ---
     /// <summary>Earliest a seated passenger pulls their restraint down.</summary>
     public static readonly TimeSpan MinRestraintCloseDelay = TimeSpan.FromSeconds(5);
